@@ -1,5 +1,3 @@
-# AWS SAA-C02
-
 ## AWS SAA-C02
 
 ${toc}
@@ -10,8 +8,7 @@ The exam validates the following abilities for an examinee
 * Provide implementation guidance based on best practices to an organization throughout the lifecycle of a
 project.
 
-The exam contains 
-the examination sores are reported as a score from 100-1,000, with a minimum passing score of 720.
+The examination scores are reported as a score from 100-1,000, with a minimum passing score of 720.
 Your score shows how you performed on the examination as a whole and whether or not you passed. 
 
 # Exam Blueprint
@@ -94,33 +91,62 @@ Default Deny (or Implicit Deny): IAM identities start off with no resource acces
 
 ## Introduction
 
-Object based storage where objects can be 0 bytes to 5TB. S3 objects has the following attributes
+S3 allows storage of objects composed of a file and associated metadata about the file. The stored objects can be 0 bytes to 5TB. S3 objects has the following attributes.
 
 1.  Key(name of the object)
 2.  Value (the data/contents of the object)
 3.  Version ID (contains the current version ID)
 
-Files are stored in buckets. Name given to S3 buckets must be globally unique. Bucket names are based on DNS which is a global namespace.
+Objects are stored in buckets. The name given to S3 buckets must be globally unique. Bucket names are based on DNS which is a global namespace. During creation the S3 buckets will need to be hosted in specific regions.
+
+Object metadata are of two type
+* system metadata 
+* user metadata
+
+Metadata associated with an uploaded object cannot be modified.
+
+Objects of up to 5GB can be stored in a single file upload. Objects greater than 5GB up to 5TB must use the multipart upload API.
+
+## S3 bucket restrictions and limitations
+If a bucket is empty, you can delete it. After a bucket is deleted, the name becomes available for reuse as long as no one else registers a bucket with the same name before you do.
+
+Buckets cannot be nested. An S3 bucket can expand infinitely to store any amount of data.
 
 Upon creation buckets are private by default and will need to be made public explicitly. This is by design so as to avoid inadvertent disclosure of data.
 
-## S3 data consistency
-|operation|consistency|Retrieval type| time | 
-|---------|-----------|------------|-------|
-|PUTS|Read-After-Write| GET, HEAD | After creation |
-|PUTS|Eventual | GET, HEAD | before creation |
-|Overwrite PUTS|Eventual | GET, HEAD | After overwrite|
-|DELETE |Eventual | GET, HEAD | After Deletion|
+once created Bucket names cannot be changed. 
 
-Updates to a single key are atomic. For example, if you PUT to an existing key, a subsequent read might return the old data or the updated data, but it never returns corrupted or partial data.
+Bucket names must be between 3 and 63 characters long.
 
+You can't migrate an existing S3 bucket into another AWS Region.
+
+Bucket names can consist only of lowercase letters, numbers, dots (.), and hyphens (-).
+
+Bucket names must begin and end with a letter or number.
+
+Bucket names must not be formatted as an IP address (for example, 192.168.5.4).
+
+Bucket names can't begin with xn-- (for buckets created after February 2020).
+
+Bucket names must be unique within a partition. A partition is a grouping of Regions. AWS currently has three partitions: aws (Standard Regions), aws-cn (China Regions), and aws-us-gov (AWS GovCloud [US] Regions).
+
+Buckets used with Amazon S3 Transfer Acceleration can't have dots (.) in their names. For more information about transfer acceleration, see Amazon S3 Transfer Acceleration.
+
+## S3 Features
+* Tiered storage and pricing variability
+* lifecycle management to expire older content
+* versioning of objects
+* encryption at rest and in transit
+* MFA deletes to prevent accidental or malicious removal of content
+* access control lists & bucket policies to secure the data
+* Deep integration with other AWS services such as Lambda, redshift, Cloudfront etc
+* Static Website hosting
 
 ## S3 SLA
 
-99.99% availability for S3 platform
-
-- Amazon guarantees 99.9% availability
-- Amazon guarantees 99.999999999% durability fo S3 information (11x9s)
+* 99.99% availability for S3 platform
+* Amazon guarantees 99.9% availability
+* Amazon guarantees 99.999999999% durability fo S3 information (11x9s)
 
 ## S3 storage classes
 
@@ -145,12 +171,22 @@ Updates to a single key are atomic. For example, if you PUT to an existing key, 
 
 ## S3 Charges
 
-- Charged for storage
-- Requests
-- Storage management pricing
-- Data Transfer Pricing
-- Transfer acceleration
-- Cross region Replication Pricing
+- Charged for storage for each object.
+- Charge by total number of requests
+- Storage management pricing (different tiers)
+- Data Transfer Pricing (in/out)
+- Transfer acceleration (Speed up upload downloads via integration with cloudfront edge nodes)
+- Cross region replication pricing
+
+## S3 data consistency
+|operation|consistency|Retrieval type| time | 
+|---------|-----------|------------|-------|
+|PUTS|Read-After-Write| GET, HEAD | After creation |
+|PUTS|Eventual | GET, HEAD | before creation |
+|Overwrite PUTS|Eventual | GET, HEAD | After overwrite|
+|DELETE |Eventual | GET, HEAD | After Deletion|
+
+Updates to a single key are atomic. For example, if you PUT to an existing key, a subsequent read might return the old data or the updated data, but it never returns corrupted or partial data.
 
 ## S3 security
 
@@ -158,6 +194,12 @@ Updates to a single key are atomic. For example, if you PUT to an existing key, 
 
 Bucket policies - control access at bucket level 
 ACL - control access at  at object level 
+
+|Access type|account Type|controlled via|
+|-----------|--------------|--------------|
+|Programatic access|Same account| IAM, Bucket policies|
+|Programatic access| Same account | IAM, ACL, Bucket policies|
+|Console & Terminal| Cross account| cross account IAM roles|
 
 
 ### Logging
@@ -180,6 +222,26 @@ Customer encrypts the object to be store and uploads the object to S3. The keys 
 2.  AWS KMS, Managed Keys - SSE-KMS
 3.  SSE with customer provided keys SSE-C
 
+### S3 Object locks
+Can add WORM locks to Standard S3 and glacier. two kinds
+* S3 Object lock - WORM
+* Glacier vault lock - WORM
+
+either for specified time or indefinitely.
+
+#### Modes
+
+* Governance.
+users cannot overwrite or delete an object version or alter it locks settings. Can however provide specific users  permissions to alter the retention settings or delete the object if necessary.
+
+* Compliance mode
+Cannot be overwritten or deleted by any users even by the root user of the account.Retention period once set cannot be shortened or changed.
+
+Retention period specified how long the items are protected from being overwritten or deleted. once a retention period ends the objects can be overwritten or deleted unless there is also a legal hold applied to the object. Legal hold can be applied b any user who has the s3putlegalhold permissions.
+
+very similar to the S3 Object lock but applies to glacier.
+
+
 ## S3 HTTP Status codes
 
 |Error Types|Response code|
@@ -200,10 +262,57 @@ If a file was initially set to public upon uploading a new version the newer ver
 
 
 ## S3 Object lifecycle management
+Automates the transition of objects between the different storage tiers.
+Can be used in conjunction with versioning this can be applied to both current and previous versions of an object.
+When setting up lifecycle rules it is important to have the prefix filter end with a "/" for e.g images/ if the filter does not have the "/" at the end or is at the beginning  this can cause the lifecycle rule to be evaluated incorrectly.
+
+## S3 webhosting 
+S3 can host static websites. this feature has to be explicitly enabled on the bucket and the objects that need to be served made public either via ACL or a bucket policy.
+
+When serving static content both a index.html and an error.html are needed
+
+## S3 cross region replication
+* Cross region replication only work if versioning is enabled.
+* When cross region replication is enabled, no pre-existing data is transferred. Only new uploads into the original bucket are replicated. All subsequent updates are replicated.
+* When you replicate the contents of one bucket to another, you can actually change the ownership of the content if you want. You can also change the storage tier of the new bucket with the replicated content.
+* When files are deleted in the original bucket (via a delete marker as versioning prevents true deletions), those deletes are not replicated.
+
+
+## S3 Event Notifications
+The Amazon S3 notification feature enables you to receive and send notifications when certain events happen in your bucket. To enable notifications, you must first configure the events you want Amazon S3 to publish (new object added, old object deleted, etc.) and the destinations where you want Amazon S3 to send the event notifications. Amazon S3 supports the following destinations where it can publish events:
+
+Amazon Simple Notification Service (Amazon SNS) - A web service that coordinates and manages the delivery or sending of messages to subscribing endpoints or clients.
+
+Amazon Simple Queue Service (Amazon SQS) - SQS offers reliable and scalable hosted queues for storing messages as they travel between computers.
+AWS Lambda - AWS Lambda is a compute service where you can upload your code and the service can run the code on your behalf using the AWS infrastructure. You package up and upload your custom code to AWS Lambda when you create a Lambda function. The S3 event triggering the Lambda function also can serve as the code's input.
+
+## S3 Performance Optimization
+ Amazon S3 bucket can support 3,500 PUT/COPY/POST/DELETE or 5,500 GET/HEAD requests per second per partitioned prefix. To optimize S3 buckets for high request rates, consider using an object key naming pattern that distributes your objects across multiple prefixes. Each additional prefix enables the  buckets to scale to support an additional 3,500 PUT/COPY/POST/DELETE or 5,500 GET/HEAD requests per second. This can be achieved by adding semi random prefixes
+ 
+ SSE-KMS affects the performance of Object retrieval/upload as there are limits to the KMS encrypt/decrypt operations and currently these limits are not extendable.
+ 
+ Use multipart upload for objects bigger than 100MB
+ For download split files into parts Via byte ranges
+ 
+ ## S3 select/Glacier select
+ Retrieve only the subset of data needed instead of getting a complete file. It works based on SQL. Write a query that allows you to only retrieve data you need. Can get data based on rows or columns.
+ 
+## Amazon S3 Inventory reports
+S3 Inventory reports can be used to audit and report on the replication and encryption status of your objects for business, compliance, and regulatory needs.  They can also be used to troubleshoot issues with S3 notifications by using the LIST Objects API or Amazon S3 Inventory reports to check for missed events.
 
 ## S3 Cheatsheet
 * See a very comprehensive S3 cheatsheet [here](https://tutorialsdojo.com/amazon-s3/)
 
-## Resources
+# AWS Organizations
+Allows to consolidate and manage multiple AWS accounts from a single central organizational account. Organized as a hierarchical tree where objects called OUs are used to organize different accounts. The permissions are applied via policies. Policies are inherited by all children when applied to a parent node. Explicit deny overrides allow at child level.s
 
+Consolidated billing is another feature provided by AWS Organizations.
+
+Organizations can be setup by first going to the root account and then creating an organization and sending invitations to other accounts or create a new account.
+
+Invitations once issued cannot be changed they will have to be deleted and reissued. Invitations expire after 15 days.
+
+SCP is service control policies which allow and restrict access to AWS resource for certain organization units or individual accounts.
+
+## Resources
 [https://github.com/keenanromain/AWS-SAA-C02-Study-Guide](https://github.com/keenanromain/AWS-SAA-C02-Study-Guide)
