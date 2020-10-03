@@ -1,6 +1,6 @@
 ## AWS SAA-C02
 
-${toc}
+{:toc}
 
 # Introduction
 The exam validates the following abilities for an examinee
