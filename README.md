@@ -1,6 +1,6 @@
 ## AWS SAA-C02
 
-{:toc}
+${toc}
 
 # Introduction
 The exam validates the following abilities for an examinee
@@ -71,7 +71,7 @@ AWS Identity and Access Management service allows you to manage users and their 
 
 ## IAM Entities
 
-- Users - Individuals such as Developers, engineers etc. New users do not have any permissions when created.
+- Users - Individuals such as Developers, Engineers etc. New users do not have any permissions when created.
 - Groups - a collection of users used to manage users who need similar levels of access to AWS resources. Allows easier management of access by attaching policies and roles at the group level. Each user in the group will inherit the same set of permissions as the ones associated with the group.
 You cannot nest IAM Groups. Individual IAM users can belong to multiple groups, but creating subgroups so that one IAM Group is embedded inside of another IAM Group is not possible.
 
@@ -190,15 +190,15 @@ Updates to a single key are atomic. For example, if you PUT to an existing key, 
 
 ## S3 security
 
-### S3 access control
+### S3 cross account access control
 
 Bucket policies - control access at bucket level 
 ACL - control access at  at object level 
 
 |Access type|account Type|controlled via|
 |-----------|--------------|--------------|
-|Programatic access|Same account| IAM, Bucket policies|
-|Programatic access| Same account | IAM, ACL, Bucket policies|
+|Programatic access|Cross account| IAM, Bucket policies|
+|Programatic access| Cross account | IAM, ACL
 |Console & Terminal| Cross account| cross account IAM roles|
 
 
@@ -242,6 +242,13 @@ Retention period specified how long the items are protected from being overwritt
 very similar to the S3 Object lock but applies to glacier.
 
 
+## S3 bucket URLS
+* Virtual style puts your bucket name 1st, s3 2nd, and the region 3rd.
+* Path style puts s3 1st and your bucket as a sub domain. 
+* Legacy Global endpoint has no region. 
+
+S3 static hosting can be your own domain or your bucket name 1st, s3-website 2nd, followed by the region. AWS are in the process of phasing out Path style, and support for Legacy Global Endpoint format is limited and discouraged. However it is still useful to be able to recognize them should they show up in logs.
+
 ## S3 HTTP Status codes
 
 |Error Types|Response code|
@@ -277,6 +284,14 @@ When serving static content both a index.html and an error.html are needed
 * When you replicate the contents of one bucket to another, you can actually change the ownership of the content if you want. You can also change the storage tier of the new bucket with the replicated content.
 * When files are deleted in the original bucket (via a delete marker as versioning prevents true deletions), those deletes are not replicated.
 
+Versioning needs to be enabled on both source and destination buckets.
+
+## S3 Transfer acceleration
+Optimizes uploads to S3 by uploading to an edge location rather than to upload to S3 bucket directly. this allows leveraging of Amazons backbone network to speed up the transfers.
+
+A S3 transfer acceleration tool allows to check the acceleration across regions 
+
+can use bucketname.s3.accelrate.s3amazonaws.com to access the accelerated bucket. For dual stack (ipv4/ipv6) can use bucketname.s3-accelerate.dualstack.amazonaws.com
 
 ## S3 Event Notifications
 The Amazon S3 notification feature enables you to receive and send notifications when certain events happen in your bucket. To enable notifications, you must first configure the events you want Amazon S3 to publish (new object added, old object deleted, etc.) and the destinations where you want Amazon S3 to send the event notifications. Amazon S3 supports the following destinations where it can publish events:
@@ -300,19 +315,118 @@ AWS Lambda - AWS Lambda is a compute service where you can upload your code and 
 ## Amazon S3 Inventory reports
 S3 Inventory reports can be used to audit and report on the replication and encryption status of your objects for business, compliance, and regulatory needs.  They can also be used to troubleshoot issues with S3 notifications by using the LIST Objects API or Amazon S3 Inventory reports to check for missed events.
 
+## DataSync overview
+Data sync allows movement of large amount of data into or out of AWS. install the data sync Agent in on premise systems and this will sync data from onprem to AWS. does encryption in transit and rest, S3, EFS, FSX. Replication can be done hourly, daily or weekly.
+
+Data Sync allows EFS to EFS sync as well.
+
+
 ## S3 Cheatsheet
 * See a very comprehensive S3 cheatsheet [here](https://tutorialsdojo.com/amazon-s3/)
 
 # AWS Organizations
-Allows to consolidate and manage multiple AWS accounts from a single central organizational account. Organized as a hierarchical tree where objects called OUs are used to organize different accounts. The permissions are applied via policies. Policies are inherited by all children when applied to a parent node. Explicit deny overrides allow at child level.s
+AWS Organizations helps centrally govern AWS environments as they grow and scale, Organizations helps to centrally manage billing; control access, compliance, and security; and share resources across  AWS accounts.
 
-Consolidated billing is another feature provided by AWS Organizations.
+## Capabilities
+
+* Consolidate billing across multiple AWS accounts
+* Automate AWS account creation and management
+* Govern access to AWS services, resources, and regions
+* Centrally manage policies across multiple AWS accounts
+* Configure AWS services across multiple accounts
+* 3500 PUTS Second 
+
+## Organization
+An organization is a collection of AWS accounts that you can organize into a hierarchy and manage centrally.
+
+## AWS account
+An AWS account is a container for your AWS resources. You create and manage your AWS resources in an AWS account, and the AWS account provides administrative capabilities for access and billing.
+
+## Master account
+A master account is the AWS account you use to create your organization. From the master account, you can create other accounts in your organization, invite and manage invitations for other accounts to join your organization, and remove accounts from your organization. You can also attach policies to entities such as administrative roots, organizational units (OUs), or accounts within your organization. The master account has the role of a payer account and is responsible for paying all charges accrued by the accounts in its organization. You cannot change which account in your organization is the master account.
+
+## member account
+A member account is an AWS account, other than the master account, that is part of an organization. If you are an administrator of an organization, you can create member accounts in the organization and invite existing accounts to join the organization. You also can apply policies to member accounts. A member account can belong to only one organization at a time.
+
+## Administrative root
+An administrative root is the starting point for organizing your AWS accounts. The administrative root is the top-most container in your organization’s hierarchy. Under this root, you can create OUs to logically group your accounts and organize these OUs into a hierarchy that best matches your business needs.
+
+## OU
+An organizational unit (OU) is a group of AWS accounts within an organization. An OU can also contain other OUs enabling you to create a hierarchy. For example, you can group all accounts that belong to the same department into a departmental OU. Similarly, you can group all accounts running production services into a production OU. OUs are useful when you need to apply the same controls to a subset of accounts in your organization. Nesting OUs enables smaller units of management. For example, in a departmental OU, you can group accounts that belong to individual teams in team-level OUs. These OUs inherit the policies from the parent OU in addition to any controls assigned directly to the team-level OU.
+ Organized as a hierarchical tree where objects called OUs are used to organize different accounts. The permissions are applied via policies. Policies are inherited by all children when applied to a parent node. Explicit deny overrides allow at child levels
+
 
 Organizations can be setup by first going to the root account and then creating an organization and sending invitations to other accounts or create a new account.
 
 Invitations once issued cannot be changed they will have to be deleted and reissued. Invitations expire after 15 days.
 
 SCP is service control policies which allow and restrict access to AWS resource for certain organization units or individual accounts.
+
+### AWS Organizations FAQs
+[FAQ](https://aws.amazon.com/organizations/faqs/)
+
+
+# Cloudfront
+Cloud front is a CDN. It is global and not region specific. Systems of distributed servers used to serve content from a server that is geographically closer to the user. Can be used to deliver your entire website including dynamic, static, streaming and interactive content.
+
+## Edge location
+Set of disturbed servers where the content is hosted.This can be separate from an AWS Region
+
+## origin
+This is the origin of all the files and data the CDN will distribute. The origin can be an S3 bucket, EC2 and ELB or route53
+
+## Distribution
+a collection of edge locations
+
+Two types of Distributions
+* Web distribution - used for web sites
+* RTMP - used for videos and streaming content
+
+## TTL
+TTL is time to live and is the time after which the objects are invalidated
+
+## Security
+
+### Access control
+* Signed URLs - 1 file = 1 URL
+* Signed cookies - 1 cookie = Multiple files
+
+Attach a policy that specifies (OAI) origin access identity
+* URL expiration
+* IP addresses
+* Trusted signers (which AWS accounts are allowed to create the signed URLs)
+ 
+ The KP used to sign URLs is account wide and is managed by the root user.
+
+### Firewall
+can enable AWS WAF in front of CDN to further throttle calls from malicious IPs
+
+## Charges
+* Based on bandwidth used to serve the content
+* Charged when you invalidate content before the TTL expires
+
+# Snowball
+* 50TB
+* 80TB
+
+uses 256 bit encryption and are securely wiped after use
+
+# Snowaball edge 
+100TB storage + compute
+
+
+# Snowbile
+Exabyte scale data transfer service 100PB.
+
+
+|Internet connections|Min days need to xfer 100TB| when to consider snowball|
+|----------|--------------|-----------------|
+|T3|269 days|2TB or more|
+|100Mbps |120 Days|5TB or more|
+|10000Mbps| 12 Days|60TB or more|
+
+# Storage gateway
+Service that connects on premise storage to AWS. 
 
 ## Resources
 [https://github.com/keenanromain/AWS-SAA-C02-Study-Guide](https://github.com/keenanromain/AWS-SAA-C02-Study-Guide)
