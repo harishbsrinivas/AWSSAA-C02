@@ -1,5 +1,7 @@
 ## AWS SAA-C02
 
+## AWS SAA-C02
+
 ${toc}
 
 # Introduction
@@ -58,7 +60,7 @@ Your score shows how you performed on the examination as a whole and whether or 
 
 ## Introduction
 
-AWS Identity and Access Management service allows you to manage users and their levels of access to various resources within one or more AWS accounts. IAM service is global and is not tied to a particular region. Changes made in IAM are applied uniformly across all regions.
+AWS Identity and Access Management service allows you to manage users and their levels of access to various resources within one or more AWS accounts(this includes accounts owned by external entities). IAM service is global and is not tied to a particular region. Changes made in IAM are applied uniformly across all regions.
 
 - IAM allows for centralized control and administration of access to your AWS account
 - Shared access to your IAM account
@@ -71,21 +73,39 @@ AWS Identity and Access Management service allows you to manage users and their 
 
 ## IAM Entities
 
-- Users - Individuals such as Developers, Engineers etc. New users do not have any permissions when created.
-- Groups - a collection of users used to manage users who need similar levels of access to AWS resources. Allows easier management of access by attaching policies and roles at the group level. Each user in the group will inherit the same set of permissions as the ones associated with the group.
-You cannot nest IAM Groups. Individual IAM users can belong to multiple groups, but creating subgroups so that one IAM Group is embedded inside of another IAM Group is not possible.
+- Users - A user is a unique identity recognized by AWS services and applications. Individuals such as Developers, Engineers etc. New users do not have any permissions when created. Note that user or group based quotas are not supported.
 
-- Roles - Are used by one AWS resource/user to access another AWS resource in the same or different AWS account. IAM Roles can be assigned to a service, such as an EC2 instance, prior to its first use/creation or after it is used/created. You can change permissions as many times as you need. This can all be done by using both the AWS console and the AWS command line tools.
+- Groups - is a collection of users. Groups can be used to manage users who need similar levels of access to AWS resources. Allows easier management of access by attaching policies and roles at the group level. Each user in the group will inherit the same set of permissions as the ones associated with the group.
+You cannot nest IAM Groups. Individual IAM users can belong to multiple groups, but creating subgroups so that one IAM Group is embedded inside of another IAM Group is not possible. A user can belong to multiple groups. Groups cannot belong to other groups.Groups can be granted permissions using access control policies. This makes it easier to manage permissions for a collection of users, rather than having to manage permissions for each individual user.
+Groups do not have security credentials, and cannot access web services directly; they exist solely to make it easier to manage user permissions.
+
+User accounts can be organized similar to LDAP by using a path for .eg /mycompany/division/project/joe.
+
+- Roles - An IAM role defines a set of permissions for making AWS service requests. IAM roles are not associated with a specific user or group. Instead, trusted entities assume roles, such as IAM users, applications, or AWS services such as EC2.They are used by one AWS resource/user to access another AWS resource in the same or different AWS account. IAM Roles can be assigned to a service, such as an EC2 instance, prior to its first use/creation or after it is used/created. You can change permissions as many times as you need. This can all be done by using both the AWS console and the AWS command line tools.
+
+Roles can be assumed by calling the AWS Security Token Service (STS) AssumeRole APIs (in other words, AssumeRole, AssumeRoleWithWebIdentity, and AssumeRoleWithSAML). These APIs return a set of temporary security credentials that applications can then use to sign requests to AWS service APIs.There is no limit to the number of IAM roles you can assume, but you can only act as one IAM role when making requests to AWS services.
 
 - Policies - rule sets allowing or denying access to a resource to which the policy is attached to. Policies are written in JSON. There are several built in policies provided by AWS. Users are also able to create custom policies for their specific needs. IAM Policies can be attached to users, groups or to roles.
 
 With IAM Policies, you can easily add tags that help define which resources are accessible by whom. These tags are then used to control access via a particular IAM policy. For example, production and development EC2 instances might be tagged as such. This would ensure that people who should only be able to access development instances cannot access production instances.
+
+IAM policies can either be inline and attached directly to the user/group or attached via a policy file to a user/group.
 
 ## Priority Levels in IAM
 Default Deny (or Implicit Deny): IAM identities start off with no resource access. Access instead must be granted.
 * Explicit Allow - Allows access to a particular resource so long as there is not an associated Explicit Deny.
 * Explicit Deny - Denies access to a particular resource and this ruling cannot be overruled.
 
+
+## IAM Credentials
+IAM users can have any combination of credentials that AWS supports, such as 
+* AWS access key
+* X.509 certificate
+* SSH key
+* password for web app login
+* MFA device. 
+
+Note that SSH keys at IAM level are only supported currently for codecommit. EC2 level SSH keys are not managed via IAM.
 
 # S3
 
@@ -237,9 +257,9 @@ users cannot overwrite or delete an object version or alter it locks settings. C
 * Compliance mode
 Cannot be overwritten or deleted by any users even by the root user of the account.Retention period once set cannot be shortened or changed.
 
-Retention period specified how long the items are protected from being overwritten or deleted. once a retention period ends the objects can be overwritten or deleted unless there is also a legal hold applied to the object. Legal hold can be applied b any user who has the s3putlegalhold permissions.
+Retention period specified how long the items are protected from being overwritten or deleted. Once a retention period ends the objects can be overwritten or deleted unless there is also a legal hold applied to the object. Legal hold can be applied b any user who has the s3putlegalhold permissions.
 
-very similar to the S3 Object lock but applies to glacier.
+Very similar to the S3 Object lock but applies to glacier.
 
 
 ## S3 bucket URLS
@@ -316,9 +336,14 @@ AWS Lambda - AWS Lambda is a compute service where you can upload your code and 
 S3 Inventory reports can be used to audit and report on the replication and encryption status of your objects for business, compliance, and regulatory needs.  They can also be used to troubleshoot issues with S3 notifications by using the LIST Objects API or Amazon S3 Inventory reports to check for missed events.
 
 ## DataSync overview
-Data sync allows movement of large amount of data into or out of AWS. install the data sync Agent in on premise systems and this will sync data from onprem to AWS. does encryption in transit and rest, S3, EFS, FSX. Replication can be done hourly, daily or weekly.
+Data sync allows movement of large amount of data into or out of AWS. install the data sync Agent in on premise systems and this will sync data from onprem to AWS. does encryption in transit and rest as well as verification/validation of data transferred. 
 
-Data Sync allows EFS to EFS sync as well.
+DataSync supports uploads to 
+* S3
+* EFS
+* FSx
+* 
+Data Sync allows EFS to EFS sync as well.  Replication can be done hourly, daily or weekly.
 
 
 ## S3 Cheatsheet
@@ -405,17 +430,44 @@ can enable AWS WAF in front of CDN to further throttle calls from malicious IPs
 * Based on bandwidth used to serve the content
 * Charged when you invalidate content before the TTL expires
 
+
+# Storage gateway
+Service that connects on premise storage to AWS. It is a virtual/physical appliace whcih provides seamless and secure integration between on premise storage environment to AWS cloud storage solutions. 
+
+3 types of storage gateways
+* File gateway (NFS/SMB)
+* Volume gateway (ISCSI)
+	* Stored volumes
+	* Cached volumes
+* Tape gateway (Virtual tape library)
+
+## file gateway
+files store as objects in S3 buckets, accessed via NFS mount points. Ownership permissions and timestamps are durably stored in S3 metadata, once objects are transferred to S3 they can be managed as native S3 objects. all of the features of S3 like lifecycle management, bucket policies etc are still available.
+
+## volume gateway
+Volume gateway presents you applications with the iSCSI lock protocol. can be used as  virtual hard disk drives. Data written can be async backed up to point in time snapshots and stored in cloud as EBS snapshots. The snapshots are incremental backups and are compressed to save costs.
+
+### Stored volume 
+Always have a complete copy of your data locally and backing that data up to AWS.
+Useful for applications needing low latency access to entire data. Creates durable offsite backups in the form of EBS snapshots. Supports stored volumes from 1GB to 64TB.
+
+### cached volumes
+Cached volumes lets you use S3 as your primary data storage and allows only your frequently used data to be cached on the storage cache. This still provides low latency access to frequently used data. Allows creation of volumes up to 1GB-32TB. GW caches the data that is written to S3 and retains recently read data in the cache.
+
+## Tape gateway
+Offers durable cost effective solutions to archive data in the AWS cloud. the VTL interface provides interfaces to leverage existing infrastructure to store data on virtual tape cartridges. Each VTL is preconfigured with a media changer and tape drives. which are available for existing backup applications as iSCSI. supported by most popular backup software. Data from VTL is archived to S3 and can be sent to glacier.
+
 # Snowball
 * 50TB
 * 80TB
 
 uses 256 bit encryption and are securely wiped after use
 
-# Snowaball edge 
+# Snowball edge 
 100TB storage + compute
 
 
-# Snowbile
+# Snowmobile
 Exabyte scale data transfer service 100PB.
 
 
@@ -424,9 +476,6 @@ Exabyte scale data transfer service 100PB.
 |T3|269 days|2TB or more|
 |100Mbps |120 Days|5TB or more|
 |10000Mbps| 12 Days|60TB or more|
-
-# Storage gateway
-Service that connects on premise storage to AWS. 
 
 ## Resources
 [https://github.com/keenanromain/AWS-SAA-C02-Study-Guide](https://github.com/keenanromain/AWS-SAA-C02-Study-Guide)
